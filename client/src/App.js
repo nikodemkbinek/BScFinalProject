@@ -2,28 +2,43 @@ import React, { useState, useEffect } from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Pie } from 'react-chartjs-2';
 
-// Register Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 function App() {
   const [data, setData] = useState(null);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState("");
+  
+  const [cityInput, setCityInput] = useState("London");
+  const [daysInput, setDaysInput] = useState(1);
 
-  // Fetch from your Node.js server
-  useEffect(() => {
-    fetch('http://localhost:5001/api/budget')
-      .then((res) => {
-        if (!res.ok) throw new Error("Server error");
+  const fetchBudget = (city, days) => {
+    setError(""); // Clear old errors
+    
+    fetch(`http://localhost:5001/api/budget?city=${city}&days=${days}`)
+      .then(async (res) => {
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || "Could not fetch data");
+        }
         return res.json();
       })
       .then((json) => setData(json))
       .catch((err) => {
         console.error("Fetch error:", err);
-        setError(true);
+        setError(err.message);
+        setData(null);
       });
+  };
+
+  useEffect(() => {
+    fetchBudget("London", 1);
   }, []);
 
-  // Set up the Chart
+  const handleSearch = (e) => {
+    e.preventDefault();
+    fetchBudget(cityInput, daysInput);
+  };
+
   const chartData = data ? {
     labels: ['Food', 'Transport', 'Accommodation'],
     datasets: [
@@ -40,14 +55,36 @@ function App() {
     <div style={{ textAlign: 'center', fontFamily: 'Arial, sans-serif', padding: '40px', backgroundColor: '#f4f7f6', minHeight: '100vh' }}>
       <h1 style={{ color: '#2c3e50' }}>🌍 Cost of Travel Tool</h1>
       
-      {error ? (
-        <div style={{ color: 'red', marginTop: '20px' }}>
-          <h2>❌ Cannot connect to backend</h2>
-          <p>Make sure your Node.js server is running on port 5001!</p>
+      <form onSubmit={handleSearch} style={{ marginBottom: '30px', display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
+        <input 
+          type="text" 
+          value={cityInput}
+          onChange={(e) => setCityInput(e.target.value)}
+          placeholder="City (e.g., Tokyo, Rome)"
+          style={{ padding: '10px', fontSize: '16px', borderRadius: '5px', border: '1px solid #ccc', width: '200px' }}
+        />
+        <input 
+          type="number" 
+          min="1"
+          value={daysInput}
+          onChange={(e) => setDaysInput(e.target.value)}
+          placeholder="Days"
+          style={{ padding: '10px', fontSize: '16px', borderRadius: '5px', border: '1px solid #ccc', width: '80px' }}
+        />
+        <button type="submit" style={{ padding: '10px 20px', fontSize: '16px', backgroundColor: '#27ae60', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
+          Calculate
+        </button>
+      </form>
+
+      {error && (
+        <div style={{ color: '#c0392b', marginBottom: '20px', backgroundColor: '#fadbd8', padding: '15px', borderRadius: '10px', display: 'inline-block' }}>
+          <h3>❌ {error}</h3>
         </div>
-      ) : data ? (
+      )}
+
+      {data && !error && (
         <div style={{ maxWidth: '600px', margin: '0 auto', background: 'white', padding: '30px', borderRadius: '15px', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
-          <h2 style={{ textTransform: 'uppercase', letterSpacing: '2px', color: '#34495e' }}>{data.city}</h2>
+          <h2 style={{ textTransform: 'uppercase', letterSpacing: '2px', color: '#34495e' }}>{data.city} - {data.days} Day(s)</h2>
           
           <div style={{ width: '300px', margin: '20px auto' }}>
             <Pie data={chartData} />
@@ -58,11 +95,9 @@ function App() {
             <p>🚌 <strong>Transport:</strong> ${data.transport}</p>
             <p>🏨 <strong>Accommodation:</strong> ${data.accommodation}</p>
             <hr style={{ border: '1px solid #eee' }} />
-            <h3 style={{ color: '#27ae60' }}>Total Estimate: ${data.food + data.transport + data.accommodation}</h3>
+            <h3 style={{ color: '#27ae60' }}>Total Trip Estimate: ${data.food + data.transport + data.accommodation}</h3>
           </div>
         </div>
-      ) : (
-        <h2 style={{ color: '#7f8c8d', marginTop: '50px' }}>⏳ Loading travel data...</h2>
       )}
     </div>
   );
