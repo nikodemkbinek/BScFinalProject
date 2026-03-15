@@ -3,35 +3,48 @@ const cors = require('cors');
 const app = express();
 const PORT = 5001;
 
-app.use(cors()); 
+app.use(cors());
 
-const travelDatabase = {
-  london: { city: "London", food: 40, transport: 15, accommodation: 80 },
-  tokyo: { city: "Tokyo", food: 30, transport: 10, accommodation: 60 },
-  paris: { city: "Paris", food: 45, transport: 20, accommodation: 100 },
-  newyork: { city: "New York", food: 50, transport: 15, accommodation: 120 },
-  rome: { city: "Rome", food: 35, transport: 12, accommodation: 90 }
-};
-
-app.get('/api/budget', (req, res) => {
-  const requestedCity = req.query.city ? req.query.city.toLowerCase().replace(/\s/g, '') : 'london';
-  
+app.get('/api/budget', async (req, res) => {
+  const city = req.query.city ? req.query.city.toLowerCase() : 'london';
   const days = req.query.days ? parseInt(req.query.days) : 1;
 
-  const cityData = travelDatabase[requestedCity];
+  try {
+    const apiResponse = await fetch(`https://restcountries.com/v3.1/capital/${city}`);
 
-  if (cityData) {
-    const responseData = {
-      city: cityData.city,
+    if (!apiResponse.ok) {
+      return res.status(404).json({ error: "City not found. Try a capital city like Tokyo, Berlin, or Ottawa!" });
+    }
+
+
+    const data = await apiResponse.json();
+    const countryData = data[0]; 
+
+    const countryName = countryData.name.common;
+    const region = countryData.region; 
+    const flagSvg = countryData.flags.svg; 
+
+
+    let baseFood = 30, baseTransport = 10, baseAccommodation = 50; 
+
+    if (region === 'Europe' || region === 'Americas') {
+      baseFood = 55; baseTransport = 20; baseAccommodation = 110;
+    } else if (region === 'Oceania') {
+      baseFood = 50; baseTransport = 15; baseAccommodation = 100;
+    }
+
+    res.json({
+      city: `${countryData.capital[0]}, ${countryName}`,
       days: days,
-      food: cityData.food * days,
-      transport: cityData.transport * days,
-      accommodation: cityData.accommodation * days
-    };
-    res.json(responseData);
-  } else {
+      food: baseFood * days,
+      transport: baseTransport * days,
+      accommodation: baseAccommodation * days,
+      flag: flagSvg
+    });
 
-    res.status(404).json({ error: "City not found in database. Try London, Tokyo, Paris, New York, or Rome." });
+  } catch (error) {
+    console.error("Server Error:", error);
+    res.status(500).json({ error: "Failed to connect to the external API." });
   }
 });
 

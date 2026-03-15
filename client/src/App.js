@@ -11,8 +11,9 @@ function App() {
   const [cityInput, setCityInput] = useState("London");
   const [daysInput, setDaysInput] = useState(1);
 
+
   const fetchBudget = (city, days) => {
-    setError(""); // Clear old errors
+    setError("");
     
     fetch(`http://localhost:5001/api/budget?city=${city}&days=${days}`)
       .then(async (res) => {
@@ -35,7 +36,7 @@ function App() {
   }, []);
 
   const handleSearch = (e) => {
-    e.preventDefault();
+    e.preventDefault(); 
     fetchBudget(cityInput, daysInput);
   };
 
@@ -60,8 +61,8 @@ function App() {
           type="text" 
           value={cityInput}
           onChange={(e) => setCityInput(e.target.value)}
-          placeholder="City (e.g., Tokyo, Rome)"
-          style={{ padding: '10px', fontSize: '16px', borderRadius: '5px', border: '1px solid #ccc', width: '200px' }}
+          placeholder="Capital City (e.g., Tokyo, Rome)"
+          style={{ padding: '10px', fontSize: '16px', borderRadius: '5px', border: '1px solid #ccc', width: '250px' }}
         />
         <input 
           type="number" 
@@ -84,7 +85,14 @@ function App() {
 
       {data && !error && (
         <div style={{ maxWidth: '600px', margin: '0 auto', background: 'white', padding: '30px', borderRadius: '15px', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
-          <h2 style={{ textTransform: 'uppercase', letterSpacing: '2px', color: '#34495e' }}>{data.city} - {data.days} Day(s)</h2>
+          
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', marginBottom: '20px' }}>
+            {data.flag && <img src={data.flag} alt="flag" style={{ width: '60px', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />}
+            <h2 style={{ textTransform: 'uppercase', letterSpacing: '2px', color: '#34495e', margin: 0 }}>
+              {data.city} - {data.days} Day(s)
+            </h2>
+          </div>
           
           <div style={{ width: '300px', margin: '20px auto' }}>
             <Pie data={chartData} />
