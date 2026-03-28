@@ -1,8 +1,10 @@
+//server initialization
 const express = require('express');
 const cors = require('cors');
 const app = express();
 const PORT = 5001;
 
+//enabling cors to allow the frontend to communicate with the backend 
 app.use(cors());
 
 app.get('/api/budget', async (req, res) => {
@@ -10,8 +12,10 @@ app.get('/api/budget', async (req, res) => {
   const days = req.query.days ? parseInt(req.query.days) : 1;
 
   try {
+    //api integration
     const apiResponse = await fetch(`https://restcountries.com/v3.1/capital/${city}`);
 
+    //error handling
     if (!apiResponse.ok) {
       return res.status(404).json({ error: "City not found. Try a capital city like Tokyo, Berlin, or Ottawa!" });
     }
@@ -24,7 +28,7 @@ app.get('/api/budget', async (req, res) => {
     const region = countryData.region; 
     const flagSvg = countryData.flags.svg; 
 
-
+//calculation
     let baseFood = 30, baseTransport = 10, baseAccommodation = 50; 
 
     if (region === 'Europe' || region === 'Americas') {
@@ -33,6 +37,7 @@ app.get('/api/budget', async (req, res) => {
       baseFood = 50; baseTransport = 15; baseAccommodation = 100;
     }
 
+    //data aggregation
     res.json({
       city: `${countryData.capital[0]}, ${countryName}`,
       days: days,
@@ -42,12 +47,14 @@ app.get('/api/budget', async (req, res) => {
       flag: flagSvg
     });
 
+    //exception catching
   } catch (error) {
     console.error("Server Error:", error);
     res.status(500).json({ error: "Failed to connect to the external API." });
   }
 });
 
+//server binding
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

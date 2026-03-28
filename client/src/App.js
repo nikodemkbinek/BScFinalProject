@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Pie } from 'react-chartjs-2';
 
+//chart creation
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 function App() {
+  //state management
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   
+  //states
   const [cityInput, setCityInput] = useState("London");
   const [daysInput, setDaysInput] = useState(1);
   const [currency, setCurrency] = useState("USD");
@@ -18,6 +21,7 @@ function App() {
 
   const convertPrice = (priceInUSD) => Math.round(priceInUSD * exchangeRates[currency]);
 
+  //data fetching
   const fetchBudget = (city, days) => {
     setError(""); 
     setIsLoading(true);
@@ -51,6 +55,7 @@ function App() {
     fetchBudget(cityInput, daysInput);
   };
 
+  //data visualisation
   const chartData = data ? {
     labels: ['Food', 'Transport', 'Accommodation'],
     datasets: [{
@@ -63,6 +68,8 @@ function App() {
     }],
   } : null;
 
+
+  //UI implementation
   const glassCardStyle = {
     background: 'rgba(255, 255, 255, 0.75)',
     borderRadius: '16px',
